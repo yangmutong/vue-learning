@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Vue + Webpack</title>
+    </head>
+    <body>
+        <div id="app" v-bind:style="{color: activeColor, fontSize: fontSize + 'px'}">
+            <p>{{message}}</p>
+            <p>{{input}}</p>
+            <input type="text" v-on:change="update($event)" value="{{input}}">
+            <input v-model="message" name="message" debounce="500">
+            <input v-model="newTodo" v-on:keyup.enter="addTodo">
+            <input v-model="filter">
+            <ul>
+                <li v-for="todo in todos | filterBy filter in 'text'" track-by="$index" transition="stragger" stragger="100">
+                    <span>{{todo.text}}</span>
+                    <button v-on:click.stop.prevent="removeTodo($index)">Remove</button>
+                </li>
+            </ul>
+            <button v-bind:class="{'class-a': isA, 'class-b': isB}" v-on:click="reverseMessage">Reverse</button>
+        </div>
+
+        <hr>
+        <div id="component-example">
+            <my-component></my-component>
+        </div>
+        <div id="inset-component-example">
+            <parent-component>
+                <child-component></child-component>
+            </parent-component>
+        </div>
+
+
+        <div id="parent">
+            <input v-model="parentMsg">
+            <br>
+            <child msg="hello!" v-bind:msg="parentMsg"></child>
+        </div>
+
+
+        <div v-my-directive="someValue" test="test"></div>
+        <script src="lib/vue.js"></script>
+        <script src="lib/vue-resource.js"></script>
+        <script src="lib/vue-router.js"></script>
+        <script src="lib/vue-animated-list.js"></script>
+        <script>
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    message: 'Hello World',
+                    todos: [
+                        {text: "jgjgjisldjjgo"},
+                        {text: "jgjgjisldjjgo"},
+                        {text: "jgjgjisldjjgo"}
+                    ],
+                    newTodo: '',
+                    filter: '',
+                    input: 'a'
+                },
+                computed: {
+                    test: {
+                        get: function(){
+                            return this.message + " test";
+                        },
+                        set: function( newVal ){
+                            this.message = newVal;
+                        }
+                    }
+                },
+                methods: {
+                    reverseMessage: function(){
+                        this.message = this.message.split('').reverse().join('');
+                    },
+                    removeTodo: function(index){
+                        this.todos.splice(index, 1);
+                    },
+                    addTodo: function(){
+                        var text = this.newTodo.trim();
+                        if(text){
+                            this.todos.push({text: text});
+                            this.newTodo = '';
+                        }
+                    },
+                    created: function(){
+                        console.log("called after vue instance is created");
+                    },
+                    compiled: function(){
+                    },
+                    ready: function(){
+                    },
+                    destoryed: function(){
+                    },
+                    update: function(event){
+                        this.input = event.target.value;
+                    }
+                }
+            });
+
+            app.$watch('message', function(newVal, oldVal){
+                console.log(0);
+            });
+
+            Vue.transition('stragger', {
+                stragger: function(index){
+                    return Math.min(300, index * 50);
+                }
+            });
+
+            //component
+            var component = Vue.extend({
+                template: '<div>A custom component</div>'
+            });
+            Vue.component('my-component', component);
+
+            var com = new Vue({
+                el: "#component-example"
+            });
+
+            //inset component
+
+            var Child = Vue.extend({
+                template: '<div>There is child component</div>'
+            });
+
+            var Parent = Vue.extend({
+                template: '<div>There is parent component</div>',
+                components: {
+                    //使得<child-component>只能用在父组件模板中
+                    'child-component': Child
+                }
+            });
+
+            Vue.component('parent-component', Parent);
+            var insetCom = new Vue({
+                el: "#inset-component-example"
+            });
+
+
+            //
+            Vue.component('another-component', {
+                template: '<div>Another component</div>'
+            });
+
+            //使用props将数据从父组件中传到子组件
+
+            Vue.component('child', {
+                props:['msg'],
+                template: '<span>{{msg}}</span>'
+            });
+            var parent = new Vue({
+                el:"#parent",
+                data: {
+                    parentMsg:''
+                }
+            });
+
+            //directive
+            //Vue.directive(id, definition);
+            Vue.directive('my-directive', {
+                params:['test'],
+                bind: function(value){
+                    //准备工作
+                    //例如添加事件处理器或者其他任何只需要运行一次的代码
+                    console.log(value);
+                    console.log(this.params.test);
+                },
+                update: function(value){
+                    //需要更新的工作
+                    //同样也花以初始值为参数调用一次
+                    console.log(value);
+                },
+                unbind:function(){
+                    //清理工作
+                    //例如删除事件监听器
+                }
+            });
+        </script>
+    </body>
+</html>
